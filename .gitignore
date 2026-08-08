@@ -1,0 +1,18 @@
+# Generated ROS 2 and simulator artifacts
+build/
+install/
+log/
+legacy_lab_runtime/
+
+# Python caches and logs
+__pycache__/
+*.py[cod]
+*.log
+
+# Local environment and editor files
+.envrc
+.vscode/
+.idea/
+
+# Local account material; never commit credentials
+宇树App账号密码.jpg

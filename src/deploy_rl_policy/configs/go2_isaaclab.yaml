@@ -1,0 +1,18 @@
+# TorchScript created by Lab_my_AMP_for_hardware_V1/isaaclab/scripts/play.py --export.
+policy_path: ../Lab_my_AMP_for_hardware_V1/isaaclab/exports/go2_amp.pt
+policy_kind: amp  # amp | secamp | rough_residual
+
+# Used only for rough_residual.
+motion_prior_path: ../Lab_my_AMP_for_hardware_V1/pretrained/[pos]+[lsgan]+[h2]+[project].pt
+residual_action_scale: 0.1
+history_steps: 1  # amp/secamp=1; rough_residual=5
+default_skill: 0  # SECAMP: pace=0, trot=1, canter=2
+
+# Isaac order: FL, FR, RL, RR; within each leg: hip, thigh, calf.
+default_angles: [0.1, 0.8, -1.5, -0.1, 0.8, -1.5, 0.1, 1.0, -1.5, -0.1, 1.0, -1.5]
+command_scale: [2.0, 2.0, 0.25]
+dof_pos_scale: 1.0
+dof_vel_scale: 0.05
+action_scale: 0.25
+control_dt: 0.02
+
