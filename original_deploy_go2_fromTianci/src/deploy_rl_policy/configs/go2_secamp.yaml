@@ -1,0 +1,37 @@
+# SECAMP motion prior config for Unitree Go2
+# Prior obs: 42-dim single-step + 3-dim skill one-hot = 45-dim total
+
+motion_prior_path: "/home/tianci/F/Thesis/AMP_for_Hardware/pretrained/[pd50_10]+[12200].pt"
+# motion_prior_path: "/home/tianci/F/Thesis/AMP_for_Hardware/pretrained/[pos]+[lsgan]+[h2]+[project].pt"
+
+
+num_obs: 45
+num_dof: 12
+
+# Default joint angles [rad] (Isaac Gym URDF order)
+# FL_hip, FL_thigh, FL_calf,  FR_hip, FR_thigh, FR_calf,
+# RL_hip, RL_thigh, RL_calf,  RR_hip, RR_thigh, RR_calf
+default_angles: [ 0.1,  0.8, -1.5,
+                 -0.1,  0.8, -1.5,
+                  0.1,  1.0, -1.5,
+                 -0.1,  1.0, -1.5]
+
+dof_pos_scale: 1.0
+dof_vel_scale: 0.05
+cmd_dir_scale: 0.5
+action_scale: 0.25
+
+# Initial skill (0=pace, 1=trot, 2=canter)
+skill: 0
+
+joystick:
+  axis_dir_x:  1
+  axis_dir_y:  0
+  sign_dir_x: 1
+  sign_dir_y: -1
+  deadzone: 0.15
+  btn_pace:   0
+  btn_trot:   1
+  btn_canter: 2
+  btn_lb:     4
+  btn_rb:     5
