@@ -1,6 +1,6 @@
-policy_path: ../Lab_my_AMP_for_hardware_V1/isaaclab/exports/go2_rough_residual.pt
+policy_path: ../go2_RL_AMP/exports/go2_rough_residual.pt
 policy_kind: rough_residual
-motion_prior_path: ../Lab_my_AMP_for_hardware_V1/pretrained/[pos]+[lsgan]+[h2]+[project].pt
+motion_prior_path: ../go2_RL_AMP/pretrained/[pos]+[lsgan]+[h2]+[project].pt
 residual_action_scale: 0.1
 history_steps: 5
 default_skill: 0
@@ -11,3 +11,6 @@ dof_vel_scale: 0.05
 action_scale: 0.25
 control_dt: 0.02
 
+
+# Must match Go2AmpEnvCfg.action_clip in go2_RL_AMP (legged_gym clip_actions=100).
+action_clip: 100.0

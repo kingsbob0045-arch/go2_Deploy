@@ -1,0 +1,180 @@
+已完成：
+sim2sim（isaacGym）
+在~/R/ProjectsTest_Lingheng_Kong/my_AMP_for_hardware_V1跑狗：
+在 AnyDesk 的 Ubuntu 桌面内的终端里运行输入这两行：
+cd ~/Repo/ProjectsTest_Lingheng_Kong/my_AMP_for_hardware_V1
+python legged_gym/scripts/train.py --task=go2_secamp --num_envs=10
+python legged_gym/scripts/train.py --task=go2_secamp --headless --num_envs=500
+
+接下来在mujoco中sim2sim和sim2real然后天赐学长的嘱咐：
+-在my_AMP_for_hardware_V1跑狗时play是简单，难的是training训练调整的东西多
+-叫我在sim2sim和sim2real时注意，ros用的是foxy版本，有环境信息后，机器人底层都由一个三状态状态机（3-state state machine）管理:趴下，起立和激活 RL 策略
+-手柄默认的是xbox研发，ps4不行再改一下引索；A/B是切换狗的站姿，按住手柄两个LB+RB不放激活自己的policy
+-激活policy有两种方法：自己带笔记本+网线连IP；或者宇树够自带jetson推理模块，带学长提示文件夹混乱，环境乱套
+-总的流程（不管是sim2sim还是sim2real）是：
+Deploy的必看文件在Desktop\Semester Arbeit\Projects\my_Deploy_Go2Robot，两个pdf一个reame.md, 还有宇树官方App的登录账号密码图片
+1确保ROS Foxy和环境是对的
+2配置SDK
+3验证手柄
+4在设置-服务状态中关闭宇树自己的policy:sport_mode，密码是8个8
+
+执行中矛盾点：
+-学长说的是ROS Foxy+Python 3.8，但在主机上显示是ROS Humble+Python 3.10
+-
+
+
+手柄使用
+注意事项：
+一、 手柄在sim2sim和sim2real模式下的“使用差异”
+1. 在 Sim2Sim 仿真中使用
+硬件接线：手柄直接插在运行仿真节点的主机
+节点启动区别：通过传递 `is_simulation:=true` 告诉状态机，手柄的指令应该发送给 MuJoCo 仿真器，而不是真实的狗（终端3/4）
+ros2 rundeploy_rl_policy low_level_ctrl --ros-args -p is_simulation:=true
+ros2 rundeploy_rl_policy rl_policy.py --is_simulation True
+
+2. 在 Sim2Real 实机部署中使用
+文档的最后两页（第5、6页）重点强调了实机时的手柄使用方案 ：
+安全前置条件：在通过手柄控制真机前，必须首先通过手机 App 登录授权账号，连接机器狗 Wi-Fi，进入设备服务状态，手动关闭机器人自带的官方运动模式（sport_mode） 。否则手柄发出的自定义策略指令会与官方运控发生严重冲突。
+
+ 部署方案 A（连接主机部署 - 有线）：
+接线：你的电脑通过网线连接 Go2 拓展坞，静态 IP 设为 `192.168.123.xxx` 。
+ 手柄：依然插在你的电脑/主机上。此时启动控制节点，将参数改为 `false`：
+ros2 rundeploy_rl_policy low_level_ctrl --ros-args -p is_simulation:=false
+ 状态机会通过网线将手柄转换为实机低级控制命令（`lowcmd`）发给狗子。
+
+ 部署方案 B（机载计算平台部署 - 无线）：
+接线：把代码仓库传入机器人机载的 Jetson 计算平台并完成编译 。
+手柄：断开显示器和网线，手柄直接通过无线（如蓝牙）或物理方式连接到机器人机载系统上，通过手柄完全无线控制机器狗移动 。
+
+二、 控制使用方法（Sim2Sim 与 Sim2Real 完全相同）
+无论是仿真还是实机，机器人底层都由一个三状态状态机（3-state state machine）管理。你需要通过手柄按键来控制它的物理行为切换：
+1. 初始状态（趴下）：
+ 启动系统后，机器人自动进入 Layingdown（趴下） 状态。
+2. 控制起立：
+ 按下 O 键：机器人执行内置算法，从“趴下”切换为 Standing Up（站立） 状态。
+3. 激活 RL 策略（最关键的一步）：
+ 机器人站稳后，同时按下 LB + RB：系统会激活你的强化学习策略节点（`rl_policy.py`），机器人开始执行推理。
+操作细节：当你想要通过手柄摇杆（Sticks）自由控制机器人前后左右移动时，必须一直保持按住 LB + RB 键 
+4. 切回趴下：
+ 按下 X 键：机器人会从站立状态切回 Layingdown（趴下）。
+
+引索信息
+摇杆 Axis 索引
+
+左摇杆：
+
+axis 1：左摇杆左右方向
+左：负值
+右：正值
+axis 2：左摇杆上下方向
+上下方向的正负需要以当前驱动实际输出为准
+
+右摇杆：
+
+axis 3：右摇杆左右方向
+axis 4：右摇杆上下方向
+
+另外还有：
+
+axis 0
+axis 5
+
+这两个是额外的模拟轴，通常对应 L2 / R2 等扳机，但具体正负方向和静止值要以当前 Linux / ROS joystick driver 的实际输出为准。图中的 axes 输出显示这些轴可能存在 -1 / 0 / 1 等特殊值，因此实现时不要假定所有轴的默认范围和方向完全一致。
+
+Button 索引
+
+按照图中黄色编号：
+
+button 0：X
+button 1：Circle / O
+button 2：Triangle
+button 3：Square
+button 4：L1
+button 5：R1
+button 6：L2
+button 7：R2
+
+也就是说：
+
+buttons:
+0 -> X
+1 -> O
+2 -> Triangle
+3 -> Square
+4 -> L1
+5 -> R1
+6 -> L2
+7 -> R2
+当前图示中最重要的控制映射
+左摇杆：
+axis 1 -> 左右
+axis 2 -> 上下
+
+右摇杆：
+axis 3 -> 左右
+axis 4 -> 上下
+
+按钮：
+button 0 -> X
+button 1 -> O
+button 2 -> Triangle
+button 3 -> Square
+button 4 -> L1
+button 5 -> R1
+button 6 -> L2
+button 7 -> R2
+
+
+已完成：
+sim2sim（Mujoco）
+在~/R/ProjectsTest_Lingheng_Kong/my_Deploy_Go2Robot中sim2sim跑狗：
+第一步：将手柄插入主机
+验证主机是否识别到 PS4 手柄
+ 检查驱动
+lsmod | grep joy
+#如果没有输出，加载驱动
+sudo modprobe joydev
+#再次检查
+ls /dev/input/js*
+正常情况：会输出/dev/input/js0（或者js1） 
+
+第二步（可跳过）：启动 Joy 节点并测试按键
+由于你现在是在笔记本上通过 VSCode 远程操作，我们要在远程主机上让 ROS 2 抓取手柄的数据：
+1. 启动手柄驱动节点：
+ros2 run joy joy_node
+(如果提示找不到命令，先运行一下 `sudo apt install ros-humble-joy` 安装驱动。)
+2. 测试按键映射（非常重要）：
+保持上面那个终端，新建一个终端窗口，同时回到my_Deploy_Go2Robot，输入：
+cd ~/Repo/ProjectsTest_Lingheng_Kong/my_Deploy_Go2Robot
+
+手柄上的按键引索pdf都记下放在Semester Arbeit\Projects\my_Deploy_Go2Robot
+代码在my_Deploy_Go2Robot\src\deploy_rl_policy\src\low_level_ctrl.cpp中
+
+第三步：分终端启动 MuJoCo Sim2Sim 仿真
+手柄测试没问题后，把整个仿真系统转起来，在远程主机中开 4 个终端窗口：
+cd ~/Repo/ProjectsTest_Lingheng_Kong/my_Deploy_Go2Robot_V1
+点击Terminator，Ctrl + Shift + O向右扩展，Ctrl + Shift + H向下新增终端
+
+终端 1：保持运行手柄节点
+ros2 run joy joy_node
+
+ 终端 2：启动 MuJoCo 仿真器（进入你的项目文件夹并激活环境）
+ros2 rundeploy_rl_policy mujoco_simulator.py
+此时实验室的主机屏幕上应该会弹出一个 MuJoCo 窗口，里面有一只趴着的 Go2 机器狗。
+
+终端 3：启动低级控制状态机控制器（必须指定为仿真模式）
+ros2 rundeploy_rl_policy low_level_ctrl --ros-args -p is_simulation:=true
+
+ 终端 4：启动强化学习策略节点
+#ros2 rundeploy_rl_policy rl_policy.py --is_simulation True
+使用deploy_secamp.py强化学习策略节点
+#ros2 rundeploy_rl_policydeploy_secamp.py --is_simulation True --mode joystick
+
+python3 src/deploy_rl_policy/scripts/deploy_secamp.py --is_simulation True --mode joystick
+
+#0X=pace, 1O=trot, 2△=canter
+用自动路线模式，就改成：
+#ros2 rundeploy_rl_policydeploy_secamp.py --is_simulation True --mode waypoint
+python3 src/deploy_rl_policy/scripts/deploy_secamp.py --is_simulation True --mode waypoint
+
+

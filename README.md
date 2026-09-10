@@ -62,6 +62,40 @@ The robot's behavior is controlled by a 3-state state machine, including:
 * **A Button:** Transitions from "Standing Up" → "Laying Down"
 * **LB + RB Simultaneously:** While standing, executes RL Policy (remains in standing state)
 
+### State Transition (Keyboard, no gamepad required)
+`keyboard_command.py` publishes the same `sensor_msgs/Joy` messages on `/joy`, so it is a
+drop-in replacement for `joy_node` and nothing downstream changes.
+
+| Key | Emulates | Effect |
+| --- | --- | --- |
+| `q` | X / A button | Lay down |
+| `e` | O / B button | Stand up |
+| `r` | Triangle | Select the canter skill |
+| `c` | LB + RB | **Toggle**: press once to activate the policy and enable the sticks, press again to release |
+| `w` / `s` | Left stick vertical | Forward / backward |
+| `a` / `d` | Left stick horizontal | Left / right |
+| arrow keys | Right stick | Yaw on left/right |
+| `space` | — | Centre every stick |
+| `x` | L2 + R2 | Ask `low_level_ctrl` to shut down |
+| `?` or `h` | — | Reprint the key map |
+
+Because the physical gamepad shares these buttons, `q` also selects the *pace* skill and
+`e` also selects *trot*, exactly as on the real controller.
+
+Stick behaviour is selected with `--stick-mode`:
+* `latch` (default) — a direction key stays applied until the same key is pressed again,
+  the opposite key is pressed, or `space` centres it. Independent of terminal key-repeat.
+* `hold` — the direction applies while the terminal auto-repeats the key and decays
+  `--hold-timeout` seconds after the last repeat, closer to a spring-return stick.
+
+The `c` toggle exists because the gamepad workflow requires LB+RB to be *held* for the
+whole run; latching them removes the need to hold two keys down.
+Releasing the latch stops the direction command but does **not** stop the policy —
+press `q` to lay the robot back down.
+
+**The node needs a real terminal.** Run it directly in a terminal window, not through a
+pipe, a launch file, or `nohup`.
+
 ### Notes:
 * The "Executing RL Policy" state is considered a special case of the "Standing Up" state
 * Controller inputs are only processed when the robot is in the appropriate state for that transition
@@ -74,6 +108,8 @@ Run the following commands in separate terminals to activate the control system:
 ```bash
 # Terminal 1: XBox Controller Interface
 ros2 run joy joy_node
+# ...or, with no gamepad, the keyboard bridge (must run in a real terminal):
+ros2 run deploy_rl_policy keyboard_command.py
 
 # Terminal 2: State Machine Controller
 ros2 run deploy_rl_policy low_level_ctrl --ros-args -p is_simulation:=true # true: simulation  false: real robot
@@ -82,8 +118,8 @@ ros2 run deploy_rl_policy low_level_ctrl --ros-args -p is_simulation:=true # tru
 ros2 run deploy_rl_policy rl_policy.py --is_simulation True  # or False
 ```
 Node Description:
-1. joy_node
-    * Interfaces with XBox controller hardware
+1. joy_node *or* keyboard_command.py
+    * Interfaces with XBox controller hardware, or turns key presses into the same messages
     * Publishes controller input to /joy topic
 2. low_level_control
     * Implements the 3-state machine (Laying Down/Standing Up/RL Policy)

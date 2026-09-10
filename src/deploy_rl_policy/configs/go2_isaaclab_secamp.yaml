@@ -1,4 +1,4 @@
-policy_path: ../Lab_my_AMP_for_hardware_V1/isaaclab/exports/go2_secamp.pt
+policy_path: ../go2_RL_AMP/exports/go2_secamp.pt
 policy_kind: secamp
 motion_prior_path: null
 residual_action_scale: 0.1
@@ -11,3 +11,6 @@ dof_vel_scale: 0.05
 action_scale: 0.25
 control_dt: 0.02
 
+
+# Must match Go2AmpEnvCfg.action_clip in go2_RL_AMP (legged_gym clip_actions=100).
+action_clip: 100.0
